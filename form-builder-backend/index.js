@@ -3,8 +3,16 @@ const app = express();
 require('dotenv').config();
 const PORT = process.env.PORT || 5001;
 const connectDB = require('./config/db');
+const session = require('express-session');
 
 connectDB();
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}));
 
 app.use(express.json());      //the default middleware
 app.use('/api/auth',require('./routes/auth'));
