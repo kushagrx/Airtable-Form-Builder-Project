@@ -13,7 +13,9 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false }
 }));
-
+app.get('/', (req, res) => {
+    res.send('Welcome to the server!');
+})
 app.use(express.json());      //the default middleware
 app.use('/api/auth',require('./routes/auth'));
 
