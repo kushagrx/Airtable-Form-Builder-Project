@@ -4,12 +4,10 @@ const crypto = require('crypto'); // Built-in node module
 const router = express.Router();
 const User = require('../models/User');
 
-// Helper function to create a base64-encoded string
 const base64URLEncode = (str) => {
     return str.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 };
 
-// Helper function to create a SHA256 hash
 const sha256 = (buffer) => {
     return crypto.createHash('sha256').update(buffer).digest();
 };
