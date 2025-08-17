@@ -20,6 +20,7 @@ app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/airtable', require('./routes/airtable'));
+app.use('/api/forms',require('./routes/forms'));
 
 app.get('/', (req, res) => {
     res.send('Welcome to the Form Builder server!');

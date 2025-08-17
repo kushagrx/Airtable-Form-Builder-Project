@@ -32,3 +32,13 @@ export const getAirtableFields = async (baseId, tableId) => {
         throw error;
     }
 };
+
+export const saveFormConfiguration = async (formConfig) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/forms`, formConfig, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error("Error saving form configuration:", error.response?.data || error.message);
+        throw error;
+    }
+};

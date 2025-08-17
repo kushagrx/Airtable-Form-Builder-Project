@@ -1,6 +1,6 @@
 const express = require('express');
 const axios = require('axios');
-const crypto = require('crypto'); // Built-in node module
+const crypto = require('crypto');
 const router = express.Router();
 const User = require('../models/User');
 
@@ -12,14 +12,11 @@ const sha256 = (buffer) => {
     return crypto.createHash('sha256').update(buffer).digest();
 };
 
-// Route 1: Redirect user to Airtable's authorization screen (with PKCE and state)
 router.get('/airtable', (req, res) => {
-    // Generate random values for security
     const state = crypto.randomBytes(16).toString('hex');
     const code_verifier = base64URLEncode(crypto.randomBytes(32));
     const code_challenge = base64URLEncode(sha256(code_verifier));
 
-    // Store the verifier and state in the session to check later
     req.session.code_verifier = code_verifier;
     req.session.state = state;
 
@@ -28,23 +25,19 @@ router.get('/airtable', (req, res) => {
     authUrl.searchParams.set('redirect_uri', 'http://localhost:5001/api/auth/airtable/callback');
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('scope', 'data.records:read data.records:write schema.bases:read user.email:read');
-    authUrl.searchParams.set('state', state); // <-- The missing 'state' parameter
+    authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('code_challenge', code_challenge);
     authUrl.searchParams.set('code_challenge_method', 'S256');
 
     res.redirect(authUrl.toString());
 });
 
-// Route 2: Handle the callback from Airtable
 router.get('/airtable/callback', async (req, res) => {
     const { code, state } = req.query;
 
-    // --- Security Check ---
-    // Verify that the 'state' matches what we stored in the session
     if (state !== req.session.state) {
         return res.status(400).send("State mismatch error. Potential CSRF attack.");
     }
-    // --------------------
 
     try {
         const params = new URLSearchParams();
@@ -53,7 +46,7 @@ router.get('/airtable/callback', async (req, res) => {
         params.append('redirect_uri', 'http://localhost:5001/api/auth/airtable/callback');
         params.append('client_id', process.env.AIRTABLE_CLIENT_ID);
         params.append('client_secret', process.env.AIRTABLE_CLIENT_SECRET);
-        params.append('code_verifier', req.session.code_verifier); // <-- The required PKCE verifier
+        params.append('code_verifier', req.session.code_verifier);
 
         const tokenResponse = await axios.post('https://airtable.com/oauth2/v1/token', params, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -70,7 +63,7 @@ router.get('/airtable/callback', async (req, res) => {
         const user = await User.findOneAndUpdate(
             { airtableUserId: airtableUserId },
             {
-                $set: { // Using $set is better practice
+                $set: {
                     email: email,
                     accessToken: access_token,
                     refreshToken: refresh_token,
@@ -78,8 +71,9 @@ router.get('/airtable/callback', async (req, res) => {
             },
             { new: true, upsert: true }
         );
+        req.session.userId = user._id;
 
-        res.send('Login successful! You can now close this tab.');
+        res.redirect('http://localhost:3000/builder');
 
     } catch (error) {
         if (error.response) {
