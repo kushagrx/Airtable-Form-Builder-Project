@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-// import { getAirtableFields } from '../api/airtable'; // Uncomment when backend is ready
+import { getAirtableFields } from '../api/airtable';
 
-// Define supported field types from your assignment PDF
 const SUPPORTED_FIELD_TYPES = [
     'singleLineText',
     'multilineText',
@@ -16,23 +15,6 @@ function FieldSelector({ baseId, tableId, onSelectFields }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // --- MOCK DATA ---
-    const mockFields = {
-        'tblMock1A': [ // For 'Projects List' table
-            { id: 'fld1', name: 'Project Name', type: 'singleLineText' },
-            { id: 'fld2', name: 'Description', type: 'multilineText' },
-            { id: 'fld3', name: 'Status', type: 'singleSelect', options: { choices: [{ name: 'Pending' }, { name: 'In Progress' }] } },
-            { id: 'fld4', name: 'Attachments', type: 'multipleAttachments' },
-            { id: 'fld5', name: 'Date Created', type: 'dateTime' }, // Unsupported type
-        ],
-        'tblMock2A': [ // For 'Customers' table
-            { id: 'fld6', name: 'Customer Name', type: 'singleLineText' },
-            { id: 'fld7', name: 'Notes', type: 'multilineText' },
-            { id: 'fld8', name: 'Type', type: 'multipleSelects', options: { choices: [{ name: 'New' }, { name: 'Returning' }] } },
-        ],
-    };
-    // --- END MOCK DATA ---
-
     useEffect(() => {
         if (!baseId || !tableId) {
             setFields([]);
@@ -44,10 +26,9 @@ function FieldSelector({ baseId, tableId, onSelectFields }) {
             try {
                 setLoading(true);
                 setError(null);
-                // const fetchedFields = await getAirtableFields(baseId, tableId); // Uncomment this line
-                // setFields(fetchedFields); // Uncomment this line
-                setFields(mockFields[tableId] || []); // Remove this line
-                setSelectedFieldIds(new Set()); // Reset selections when table changes
+                const fetchedFields = await getAirtableFields(baseId, tableId);
+                setFields(fetchedFields);
+                setSelectedFieldIds(new Set());
             } catch (err) {
                 setError(`Failed to load fields for table ID: ${tableId}.`);
                 console.error(err);
@@ -67,7 +48,6 @@ function FieldSelector({ baseId, tableId, onSelectFields }) {
             newSelected.add(fieldId);
         }
         setSelectedFieldIds(newSelected);
-        // Pass the selected fields back to the parent component
         const selectedFieldsData = fields.filter(field => newSelected.has(field.id));
         onSelectFields(selectedFieldsData);
     };
